@@ -11,7 +11,7 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = False
-    rating: Optional[int] = None
+    
 
 ### Sample Posts
 my_posts = [{"title":"title of Post 1","content":"content of Post 1","id": 1},{"title":"title of Post 2","content":"content of Post 2","id": 2}]
@@ -81,4 +81,4 @@ def update_post(id: int, post: Post):
 
     return {'message':f'{post_dict} Updated'}
 
-# 2:25:15
+# 2:34:39
