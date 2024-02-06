@@ -7,7 +7,7 @@ from configparser import ConfigParser
 config = ConfigParser()
 config.read('config.ini')
 
-DATABASE_URL = config['USER']['SQL_ALCHEMY_URL'] 
+DATABASE_URL = f"mysql://root:{config['USER']['password']}@localhost/api_db"
 
 engine = create_engine(DATABASE_URL)
 
