@@ -8,19 +8,14 @@ from sqlalchemy.orm import Session
 from configparser import ConfigParser
 import time
 from app import models
-from app.database import engine, SessionLocal
+from app.database import engine, get_db
 
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db 
-    finally:
-        db.close()
+
 
 config = ConfigParser()
 config.read('config.ini')
@@ -48,22 +43,6 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = False
-    
-
-# ### Sample Posts
-# my_posts = [{"title":"title of Post 1","content":"content of Post 1","id": 1},{"title":"title of Post 2","content":"content of Post 2","id": 2}]
-
-# def find_post(id):
-#     for p in my_posts:
-#         if p['id'] == id:
-#             return p 
-    
-# def find_index(id):
-#     for i, p in enumerate(my_posts):
-#         if p['id'] == id:
-#             return i 
-
-
 
 @app.get("/")
 def root():
@@ -107,7 +86,7 @@ def create_posts(post:Post):
     mydb.commit()
     return {"data": new_post}
 
-# 4:24:16
+
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
     # delete posts 
