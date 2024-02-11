@@ -48,17 +48,17 @@ class Post(BaseModel):
 def root():
     return {"message":"Hello World !"}
 
-@app.get("/sqlorm")
-def test(db:Session = Depends(get_db)):
-    return {'status':"success"}
+# @app.get("/sqlorm")
+# def test(db:Session = Depends(get_db)):
+#     posts = db.query(models.Post).all()
+#     return {'data':posts}
 
 # Returns all the posts 
 @app.get("/posts")
-def get_post():
-    cursor.execute("""SELECT * FROM posts""")
-    posts = cursor.fetchall()
-    print(posts)
-    mydb.commit()
+def get_post(db:Session = Depends(get_db)):
+    # cursor.execute("""SELECT * FROM posts""")
+    # posts = cursor.fetchall()
+    posts = db.query(models.Post).all()
     return {"data": posts}
 
 # Returns the latest post 
@@ -68,6 +68,7 @@ def get_latest_post():
     new_post = cursor.fetchone()
     return {"data":new_post}
 
+# 5:16:03
 # Returns post with id 
 @app.get("/posts/{id}")
 def get_post(id: int):
@@ -79,11 +80,13 @@ def get_post(id: int):
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post:Post):
-    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s)""", (post.title, post.content, post.published))
-    cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
-    new_post = cursor.fetchone()
-    mydb.commit()
+def create_posts(post:Post, db:Session = Depends(get_db)):
+    # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s)""", (post.title, post.content, post.published))
+    # cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
+    new_post = models.Post(**post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
     return {"data": new_post}
 
 
