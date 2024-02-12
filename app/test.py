@@ -51,14 +51,14 @@ def get_post(db:Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {"data": posts}
+    return posts
 
 # Returns the latest post 
 @app.get("/posts/latest")
 def get_latest_post():
     cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
     new_post = cursor.fetchone()
-    return {"data":new_post}
+    return new_post
 
 # 5:16:03
 # Returns post with id 
@@ -69,10 +69,10 @@ def get_post(id:int ,db:Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail=f'post with id: {id} was not found')
-    return {"post details": post}
+    return post
 
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_posts(post:schemas.PostCreate, db:Session = Depends(get_db)):
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s)""", (post.title, post.content, post.published))
     # cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
@@ -80,7 +80,7 @@ def create_posts(post:schemas.PostCreate, db:Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": new_post}
+    return new_post
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -112,5 +112,5 @@ def update_post(id: int, post: schemas.PostUpdate, db:Session = Depends(get_db))
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
 
-    return {'data':post_query.first()}
+    return post_query.first()
 

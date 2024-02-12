@@ -12,3 +12,11 @@ class PostCreate(PostBase):
 
 class PostUpdate(PostBase):
     pass 
+
+class PostResponse(PostBase):
+    title: str
+    content: str
+    published: bool
+
+    class Config:
+        from_attributes = True
