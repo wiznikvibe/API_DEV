@@ -6,7 +6,7 @@ import mysql.connector as conn
 from sqlalchemy.orm import Session
 from configparser import ConfigParser
 import time
-from app import models, schemas
+from app import models, schemas, utils
 from app.database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -119,6 +119,10 @@ def update_post(id: int, post: schemas.PostUpdate, db:Session = Depends(get_db))
 
 @app.post("/registration", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db:Session = Depends(get_db)):
+
+    # hash password
+    hashed_password = utils.hash(user.password)
+    user.password = hashed_password
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
