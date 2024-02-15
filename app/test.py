@@ -1,6 +1,6 @@
 from fastapi import FastAPI , Response, status, HTTPException, Depends
 from fastapi.params import Body
-from typing import Optional
+from typing import Optional, List
 from random import randrange
 import mysql.connector as conn
 from sqlalchemy.orm import Session
@@ -42,7 +42,7 @@ def root():
 
 
 # Returns all the posts 
-@app.get("/posts")
+@app.get("/posts", response_model=List[schemas.PostResponse])
 def get_post(db:Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
@@ -117,3 +117,11 @@ def update_post(id: int, post: schemas.PostUpdate, db:Session = Depends(get_db))
 
     return post_query.first()
 
+@app.post("/registration", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+def create_user(user: schemas.UserCreate, db:Session = Depends(get_db)):
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
