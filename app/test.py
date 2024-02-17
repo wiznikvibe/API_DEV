@@ -8,6 +8,7 @@ from configparser import ConfigParser
 import time
 from app import models, schemas, utils
 from app.database import engine, get_db
+from app.routers import post, user
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -17,14 +18,14 @@ config = ConfigParser()
 config.read('config.ini')
 
 host = config['USER']['host']
-user = config['USER']['user']
+admin = config['USER']['user']
 password = config['USER']['password']
 database = config['USER']['database']
 
 
 while True:
     try:
-        mydb = conn.connect(host=host, user=user, password=password, database=database)
+        mydb = conn.connect(host=host, user=admin, password=password, database=database)
         cursor = mydb.cursor(buffered=True, dictionary=True)
         # tables = cursor.execute("""SHOW TABLES;""")
         print("Connection Succefully Established")
@@ -35,97 +36,17 @@ while True:
         print("Error:", e)
         time.sleep(2)
 
+app.include_router(post.router)
+app.include_router(user.router)
+
+
 
 @app.get("/")
 def root():
     return {"message":"Hello World !"}
 
 
-# Returns all the posts 
-@app.get("/posts", response_model=List[schemas.PostResponse])
-def get_post(db:Session = Depends(get_db)):
-    # cursor.execute("""SELECT * FROM posts""")
-    # posts = cursor.fetchall()
-    posts = db.query(models.Post).all()
-    return posts
 
 
-# Returns the latest post 
-@app.get("/posts/latest")
-def get_latest_post():
-    cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
-    new_post = cursor.fetchone()
-    return new_post
 
 
-# Returns post with id 
-@app.get("/posts/{id}", response_model=schemas.PostResponse)
-def get_post(id:int ,db:Session = Depends(get_db)):
-    
-    # cursor.execute(f"""SELECT * FROM posts WHERE id = {id}""")
-    # post = cursor.fetchone()
-
-    post = db.query(models.Post).filter(models.Post.id == id).first()
-    if not post:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail=f'post with id: {id} was not found')
-    return post
-
-
-@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_posts(post:schemas.PostCreate, db:Session = Depends(get_db)):
-    
-    # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s)""", (post.title, post.content, post.published))
-    # cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
-
-    new_post = models.Post(**post.dict())
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-    return new_post
-
-
-@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db:Session = Depends(get_db)):
-    
-    # cursor.execute(f"""SELECT * FROM posts WHERE id = {id}""")
-    # del_post = cursor.fetchone()
-    # cursor.execute(f"""DELETE FROM posts WHERE id = {id}""")
-    # mydb.commit()
-    
-    del_post = db.query(models.Post).filter(models.Post.id == id)
-    if del_post.first() == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
-
-    del_post.delete(synchronize_session=False)
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@app.put('/posts/{id}', response_model=schemas.PostResponse)
-def update_post(id: int, post: schemas.PostUpdate, db:Session = Depends(get_db)):
-    
-    # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s""", (post.title, post.content, post.published, str(id)))
-    # cursor.execute(f"""SELECT * FROM posts WHERE id = {id}""")
-    # updated_post = cursor.fetchone()
-    # mydb.commit()
-    post_query = db.query(models.Post).filter(models.Post.id == id)
-    updatepost = post_query.first()
-    if updatepost == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} does not exist")
-    post_query.update(post.dict(), synchronize_session=False)
-    db.commit()
-
-    return post_query.first()
-
-@app.post("/registration", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def create_user(user: schemas.UserCreate, db:Session = Depends(get_db)):
-
-    # hash password
-    hashed_password = utils.hash(user.password)
-    user.password = hashed_password
-    new_user = models.User(**user.dict())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return new_user
