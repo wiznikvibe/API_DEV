@@ -36,6 +36,8 @@ while True:
         print("Error:", e)
         time.sleep(2)
 
+
+
 app.include_router(post.router)
 app.include_router(user.router)
 
@@ -45,7 +47,7 @@ app.include_router(user.router)
 def root():
     return {"message":"Hello World !"}
 
-
+# JWT Token Authentication 6:40:00
 
 
 

@@ -5,10 +5,13 @@ from fastapi import FastAPI , Response, status, HTTPException, Depends, APIRoute
 from typing import List
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix = "/posts",
+    tags=['Posts']
+)
 
 # Returns all the posts 
-@router.get("/posts", response_model=List[schemas.PostResponse])
+@router.get("/", response_model=List[schemas.PostResponse])
 def get_post(db:Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
@@ -16,16 +19,16 @@ def get_post(db:Session = Depends(get_db)):
     return posts
 
 
-# Returns the latest post 
-@router.get("/posts/latest")
-def get_latest_post():
-    cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
-    new_post = cursor.fetchone()
-    return new_post
+# # Returns the latest post 
+# @router.get("/latest")
+# def get_latest_post():
+#     cursor.execute("""SELECT * FROM posts ORDER BY id DESC LIMIT 1""")
+#     new_post = cursor.fetchone()
+#     return new_post
 
 
 # Returns post with id 
-@router.get("/posts/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostResponse)
 def get_post(id:int ,db:Session = Depends(get_db)):
     
     # cursor.execute(f"""SELECT * FROM posts WHERE id = {id}""")
@@ -37,7 +40,7 @@ def get_post(id:int ,db:Session = Depends(get_db)):
     return post
 
 
-@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_posts(post:schemas.PostCreate, db:Session = Depends(get_db)):
     
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s)""", (post.title, post.content, post.published))
@@ -50,7 +53,7 @@ def create_posts(post:schemas.PostCreate, db:Session = Depends(get_db)):
     return new_post
 
 
-@router.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db:Session = Depends(get_db)):
     
     # cursor.execute(f"""SELECT * FROM posts WHERE id = {id}""")
@@ -67,7 +70,7 @@ def delete_post(id: int, db:Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put('/posts/{id}', response_model=schemas.PostResponse)
+@router.put('/{id}', response_model=schemas.PostResponse)
 def update_post(id: int, post: schemas.PostUpdate, db:Session = Depends(get_db)):
     
     # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s""", (post.title, post.content, post.published, str(id)))
